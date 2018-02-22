@@ -3,6 +3,7 @@ import glob
 import re
 
 #placeholder pathname, kan erstatte med input
+# kanskje ikke så lurt å gjøre om hele settet hver gang
 
 path = "placeholder"
 savepath = "placeholder"
@@ -15,7 +16,7 @@ for files in glob.glob(path +"*.txt"):
 infile.close()
 outfile.close
 
-#for å fjerne html tags med regex
+#for å fjerne html tags med regex, kan muligens bruke XML fra pythons standard-bibliotek til dette.
 def removeTags(inputString):
     cleanr = re.compile('<.*?>')
     cleantext = re.sub(cleanr, '', inputString)
