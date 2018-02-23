@@ -3,10 +3,11 @@ import glob
 import re
 
 #placeholder pathname, kan erstatte med input
-# kanskje ikke så lurt å gjøre om hele settet hver gang
+
 
 path = "placeholder"
 savepath = "placeholder"
+# åpner alle filer i en path, renser og kopierer til en annen path
 for files in glob.glob(path +"*.txt"):
     infile = open(files)
     outfile = open(savepath,'w')
@@ -16,11 +17,12 @@ for files in glob.glob(path +"*.txt"):
 infile.close()
 outfile.close
 
-#for å fjerne html tags med regex, kan muligens bruke XML fra pythons standard-bibliotek til dette. Funker med føkka formatering også
-TAG_RE = re.compile(r'<[^>]+>')
+#for å fjerne html/xml tags med regex, erstatter med mellomrom . Funker med føkka formatering også
+
 
 def remove_tags(text):
-    return TAG_RE.sub('', text)
+    expression = re.compile(r'<[^>]+>')
+    return expression.sub('', text)
 
 #fikk ikk den til å funke
 #def remove_tags(text):
