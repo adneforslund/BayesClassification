@@ -24,6 +24,4 @@ def remove_tags(text):
     expression = re.compile(r'<[^>]+>')
     return expression.sub('', text)
 
-#fikk ikk den til å funke
-#def remove_tags(text):
-#    ''.join(xml.etree.ElementTree.fromstring(text).itertext())
+
