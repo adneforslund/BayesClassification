@@ -1,7 +1,8 @@
+# -*- coding: utf-8 -*-
 import os
 import glob
 import re
-
+import time
 
 from pathlib import Path
 
@@ -31,23 +32,28 @@ def probabilityPre(word, wordlist, c):
     else:
         return -1.0
 
-def mean(clas, mean, wordlist):
+def mean(clas, wordlist):
     counter = 0
     for (w, c) in wordlist:
         if c == clas:
             counter += 1
-    mean = float(counter) / float(len(wordlist))
-    return mean
+    return float(counter) / float(len(wordlist))
+
 
 def bayes(a, b, pre):
     return (a*pre)/b
 
 def classify(word, wordlist, c):
     pre = probabilityPre(word, wordlist, c)
+    mean = 0
+    if c == 1:
+        mean = positiveMean
+    else:
+        mean = negativeMean
     if pre == -1.0:
         return -1.0
     else:
-        return bayes(0.5, mean(c, negativeMean, wordlist), pre)
+        return bayes(0.5, mean, pre)
 
 #for å fjerne html/xml tags med regex, erstatter med mellomrom . Funker med føkka formatering også
 def remove_tags(text):
@@ -70,7 +76,7 @@ def reviewClassifier(review,wordlist, c):
     for word in a_new:
         current += 1
         loading = (current / total) * 100
-        print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n" + str(loading) + "%")
+        print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n" + str(int(loading)) + "%")
         word = word.lower()
         word = remove_punctuation(word)
         prob = classify(word, wordlist, c)
@@ -104,4 +110,8 @@ for d in dirs:
 testReview = "The Detonator is set in Bucharest where some sort of ex CIA Government agent named Sonni Griffith (Wesley Snipes) has tracked down a arms dealer named Dimitru (Matthew Leitch), things go wrong though & Dimitru finds out that Sonni is working for the US Government. After a big shoot-out most of Dimitru's men have been killed by Sonni which the local Romanian police force are unhappy about, top man Flint (Michael Brandon) decides to send Sonni back to the US & at the same time protect a woman named Nadia Cominski (Silvia Colloca) who is also being sent back to the US. However it turns out that Nadia is wanted by Dimitru & his football club owning boss Jozef (Tim Dutton) who need her in order to complete a deal for a nerve gas bomb which they intend to set off in Washington killing millions of people...<br /><br />This American & Romanian co-production was directed by Po-Chih Leong & The Detonator confirms beyond any shadow of a doubt that Wesely Snipes has joined the washed up action film stars club who are relegated to making generic action films in Eastern European locations, yep Snipes has joined such luminaries as Jean-Claude Van Damme, Steven Seagal, Dolph Lundgren, Rutger Hauer & Chuck Norris. I give Snipes a bit of credit since he held on a little longer than the rest with the excellent Blade: Trinity (2004) still fresh in a lot of cinema goers minds (every film he has made since has gone straight-to-DVD) but it had to happen sooner or later, like a lot of the names I've mentioned Snipes has lived off the reputation of a few great films & if you look at his career he's been in more bad films that good ones. Like the recent films of JCVD & Seagal The Detonator is pretty awful. The script by Martin Wheeler is as predictable, boring & by-the-numbers as anything out there. The Detonator is the sort of film you expect to see on an obscure cable TV channel playing at 2 O'clock in the morning. The Detonator is chock full of clichés, Snipes is forced into a situation where he has to protect a woman & at first they dislike each other but by the end they are in love, his closest friend at the CIA turns out to be a traitor while the obnoxious by the book boss no-one likes actually turns out to be a pretty decent guy, Snipes character is allowed to run around Bucharest shooting, killing & blowing people up like it doesn't matter & he never gets arrested, the action is dull & forgettable, the bad guy own a football club so there are lots of annoying football terminology & there aren't even any funny one-liners.<br /><br />Director Leong doesn't do anything anything to liven things up, The Detonator looks cheap with a car chase in which the two cars never seem to get over the 30mph mark. OK the action scenes are relatively well staged but they are few & far between & utterly forgettable in a 'bad guy shoots at Snipes & misses, in return Snipes shoots at bad guy & kills him' sort of way. There's a half decent car crash & explosion but very little else. It seems some of The Detonator was shot in a Romanian football stadium, I think I'd rather have watched the game for 90 minutes rather than this film.<br /><br />With a supposed budget of about $15,000,000 The Detonator is reasonably well made but not that much really happens. Set & filmed in Bucharest in Romania. The acting isn't that great, Snipes just doesn't seem interested & feels like he is just there for the money which I don't blame him for at all.<br /><br />The Detonator is yet another poor clichéd action film starring a has been actor & set in Eastern Europe. Why do Sony keep making these things? Not recommend, there are much better action fare out there."
 
 
-print("negative review chance: "+str(reviewClassifier(testReview,words, 1)))
+positiveMean = mean(1, words)
+negativeMean = mean(0, words)
+start = time.time()
+print("negative review chance: "+str(reviewClassifier(testReview,words, 0)))
+print("kjøretid : " + str(time.time() - start))
