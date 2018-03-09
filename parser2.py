@@ -1,21 +1,24 @@
 # -*- coding: utf-8 -*-
-import sys
 import codecs
+import glob
+import os
+import re
+import sys
+import time
+from collections import Counter
+from pathlib import Path
+
+# å lese enkelte tegn på windows var ikke alltid lett.
 if sys.stdout.encoding != 'cp850':
   sys.stdout = codecs.getwriter('cp850')(sys.stdout.buffer, 'strict')
 if sys.stderr.encoding != 'cp850':
   sys.stderr = codecs.getwriter('cp850')(sys.stderr.buffer, 'strict')
 
-import os
-import glob
-import re
-import time
-
-from pathlib import Path
 
 negativeMean = 0
 positiveMean = 0
 
+# Todo: vurdere hvordan man henter path
 path = Path('DATA/aclImdb/train/')
 dirs = [x for x in path.iterdir() if x.is_dir() and x.name == "neg" or x.name == "pos"]
 for d in dirs:
@@ -57,12 +60,12 @@ def classify(word, wordlist, c):
     else:
         return bayes(0.5, mean, pre)
 
-#for Ã¥ fjerne html/xml tags med regex, erstatter med mellomrom . Funker med fÃ¸kka formatering ogsÃ¥
+#for a fjerne html/xml tags med regex, erstatter med mellomrom . Funker med fakka formatering ogsa
 def remove_tags(text):
     expression = re.compile(r'<[^>]+>')
     return expression.sub('', text)
 
-
+#fjerner tulletegn fra en string
 def remove_punctuation(text):
     for p in [',', '!', '"', '.', '?', ')', '(', '-', "'s", ":", ";"]:
         text = text.replace(p, '')
@@ -90,9 +93,9 @@ def reviewClassifier(review, wordlist, c):
 
 start = time.time()
 print("Loading data from files...")
-sys.stdout.flush)
+sys.stdout.flush()
 for d in dirs:
-    # Ã¥pner alle filer i en path, renser og kopierer til en annen path
+    # Apner alle filer i en path,
     for file in glob.glob(str(d) + "/*.txt"):
         # print(file)            
         infile = open(file, encoding='utf-8', errors='ignore')
@@ -120,7 +123,6 @@ uniques = set(wordsTmp)
 print("Counting occurences...")
 sys.stdout.flush()
 
-from collections import Counter
 
 count = Counter(wordsTmp)
 total = Counter(word[0] for word in wordsTmp)
@@ -140,4 +142,4 @@ positiveMean = mean(1, wordCounts)
 negativeMean = mean(0, wordCounts)
 start = time.time()
 print("negative review chance: "+str(reviewClassifier(testReview, wordCounts, 0)))
-print("kjÃ¸retid : " + str(time.time() - start))
+print("runtime  : " + str(time.time() - start))
