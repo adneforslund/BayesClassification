@@ -44,7 +44,7 @@ def mean(c, wordlist):
         total += j
     return float(counter) / float(total)
 
-
+# bayes regel : https://cdn-images-1.medium.com/max/1600/1*9YuCNcICo5PW5qqQug6Yqw.png
 def bayes(a, b, pre):
     return (a*pre)/b
 
