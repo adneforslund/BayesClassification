@@ -18,7 +18,7 @@ if sys.stderr.encoding != 'cp850':
 negativeMean = 0
 positiveMean = 0
 
-# Todo: vurdere hvordan man henter path
+# programmet ligger på samme nvå som DATA-mappa
 path = Path('DATA/aclImdb/train/')
 dirs = [x for x in path.iterdir() if x.is_dir() and x.name == "neg" or x.name == "pos"]
 for d in dirs:
