@@ -28,13 +28,13 @@ sys.stdout.flush()
 words = []
 wordsTmp = []
 wordCounts = []
-
+#rekner sannsynlighet
 def probabilityPre(word, wordlist, c):
    for (w, c, icl, tot) in wordlist:
         if w == word and tot > 0:
             return float(icl) / float(tot)    
    return -1.0
-
+# rekner gjennomsnitt
 def mean(c, wordlist):
     counter = 0
     total = 0
@@ -47,7 +47,7 @@ def mean(c, wordlist):
 # bayes regel : https://cdn-images-1.medium.com/max/1600/1*9YuCNcICo5PW5qqQug6Yqw.png
 def bayes(a, b, pre):
     return (a*pre)/b
-
+# tar et ord i en review, sjekker om den er positiv eller negativ
 def classify(word, wordlist, c):
     pre = probabilityPre(word, wordlist, c)
     mean = 0
@@ -71,7 +71,7 @@ def remove_punctuation(text):
         text = text.replace(p, '')
     return text
 
-
+# tar en review, går ord for ord og gir sannsynlighet for at den er negativ eller positiv
 def reviewClassifier(review, wordlist, c):
     a_rm = remove_tags(review)
     a_new = a_rm.split(' ')
