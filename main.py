@@ -16,7 +16,8 @@ def main():
     args = parser.parse_args()
     myFile = args.myFile
 
-    # This is the one part I added (the read() call)
+    
     text = open(myFile)
     print(text.read())
 
+main()
