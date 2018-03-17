@@ -6,9 +6,15 @@ For help use '  python main.py -h   '
 To use this program, run it in the command line as python main.py with the following arguments
 
 main.py -h 
-  -To get help useing the program
+  -To get help using the program
 
-main.py -f path/to/DATA/
-  -To train the Bayes classifier, given 
+main.py {-tr, --train} -f path/to/DATA/
+  - Train the classifier, given a pathname to the top directory containing the train-folder
   
-main.py -cl , 
+main.py {-cl , --classify} -f path/to/DATA/
+  -Use to classify one review, given a pathname to the review
+  
+
+
+main.py {-te, --test} -f path/to/DATA/
+  -classify all the reviews in test directory in the DATA folder
