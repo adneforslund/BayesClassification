@@ -141,6 +141,36 @@ def pather(path):
     sys.stdout.flush()
     return dirs
 
+def testAllReviews(nbc, testDirectory):
+    totalCount = 0
+    correctCount = 0
+    testresult=0
+    for d in testDirectory:
+
+        # Apner alle filer i en path,
+        for file in glob.glob(str(d) + "/*.txt"):
+            infile = open(file, encoding='utf-8', errors='ignore')
+            a = infile.readline()
+            print (a)
+            a_rm = remove_tags(a)
+            a_new = a_rm.lower()
+            a_new = remove_punctuation(a_new)
+            a_new = a_new.split(' ')
+            if d.name == "neg":
+                testresult = reviewClassifier(a_new, nbc.training, nbc.positiveMean, nbc.negativeMean, 0)
+            elif d.name == "pos":
+                testresult = reviewClassifier(a_new, nbc.training, nbc.positiveMean, nbc.negativeMean, 1)
+            if testresult>0.5:
+                correctCount+=1
+            totalCount+=1
+
+
+            infile.close()
+    rate = float(correctCount) / float(totalCount) * 100
+
+    return rate
+
+
 def reviewClassifier(review, wordlist, positive, negative, c):
     a_rm = remove_tags(review)
     a_new = a_rm.split(' ')
@@ -213,6 +243,8 @@ def main():
         start = time.time() 
         nbc = loadNBC("nbc.txt")
         # Test her
+        rate = testAllReviews(nbc, dirs)
+        print (rate)
         print("Time used: {:.2f}s".format(time.time() - start))
 
     elif isClassify:
