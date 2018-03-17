@@ -149,11 +149,21 @@ class NBC:
         self.positiveMean = negativeMean
         self.dict = dict
 
+# prøver å få til errorhandling, men tar alt som errors
+def error_handler(parser, arg):
+    if not os.path.exists(arg):
+        parser.error("The path given: %s is not valid" % arg)
+    else:
+        return open(arg, 'r')
+
 def main():
     parser = ArgumentParser()
-    parser.add_argument("-f", "--file", dest="myFile",
-                        help="Open specified file")
+    parser.add_argument("-f", "--file", dest="myPath",
+                        help="Give a path to your DATA directory"
+                        )
+
     args = parser.parse_args()
+    
     path = args.myFile
     dirs = pather(path)
     nbc = train(dirs)
@@ -166,6 +176,7 @@ def main():
     print(time.time() - start)
 #   text = open(myFile)
 #   print(text.read())
+
 
 
 main()
