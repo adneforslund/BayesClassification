@@ -159,19 +159,20 @@ def error_handler(parser, arg):
 def main():
     parser = ArgumentParser()
     parser.add_argument("-f", "--file", dest="myPath",
-                        help="Give a path to your DATA directory"
-                        )
+                        help="Give a path to your DATA directory")
 
     args = parser.parse_args()
     
-    path = args.myFile
+    path = args.myPath
     dirs = pather(path)
-    nbc = train(dirs)
+    dict = train(dirs)
 
     positiveMean = mean(1, nbc)
     negativeMean = mean(0, nbc)
 
-    return 
+    nbc = NBC(positiveMean, negativeMean, dict)
+    
+    
     start = time.time() 
     print(time.time() - start)
 #   text = open(myFile)
