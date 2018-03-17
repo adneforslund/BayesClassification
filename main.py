@@ -157,32 +157,47 @@ def error_handler(parser, arg):
         return open(arg, 'r')
 
 def main():
-    parser = ArgumentParser()
-    parser.add_argument("-f", "--file", dest="myPath",
-                        help="Give a path to your DATA directory")
-
-    args = parser.parse_args()
     
-    path = args.myPath
+    parser = ArgumentParser()
+    parser.add_argument("-f", "--file", dest = "myPath",
+                        help="Give a path to your DATA directory", required = True
+                        )
+    parser.add_argument("-te", "--test", dest = "myTest", help="Give pathname to the DATA/ directory", required = False)
+    parser.add_argument("-cl", "--classify", dest = "myClassify", help="Classify one review given to stdin", required = False)
+    parser.add_argument("-tr", "--train", dest = "myTrain", help="Give pathname to DATA/ directory to train the classifier", required = False)
+    args = parser.parse_args()
 
+    path = args.myPath
+    test = args.myTest
+    classify = args.myClassify
+    train = args.myTrain
+    
     try:
         dirs = pather(path)
     except FileNotFoundError:
         print("Invalid pathname, try again. ")
         sys.exit(0)
-    nbc = train(dirs)
 
-    positiveMean = mean(1, nbc)
-    negativeMean = mean(0, nbc)
+    if train:
+        start = time.time() 
+        nbc = train(dirs)
+        positiveMean = mean(1, nbc)
+        negativeMean = mean(0, nbc)
+        nbc = NBC(positiveMean, negativeMean, dict)
+        # Lagre training data
+        print(time.time() - start)
 
-    nbc = NBC(positiveMean, negativeMean, dict)
-    
-    
-    start = time.time() 
-    print(time.time() - start)
-#   text = open(myFile)
-#   print(text.read())
+    elif test:
+        start = time.time() 
+        # Last training data
+        # Test her
+        print(time.time() - start)
 
-
-
+    elif classify:
+        start = time.time() 
+        # Last training data
+        # stdin = input()
+        # resultat = reviewClassifier()
+        print(time.time() - start)
+            
 main()
