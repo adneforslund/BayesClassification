@@ -109,7 +109,6 @@ def classify(word, wordlist, positive, negative, c):
         mean = positive
     else:
         mean = negative
-    print(mean)
     if pre == -1.0:
         return -1.0
     else:
@@ -120,7 +119,7 @@ def classify(word, wordlist, positive, negative, c):
 
 def remove_tags(text):
     expression = re.compile(r'<[^>]+>')
-    return expression.sub('', text)
+    return expression.sub('', str(text))
 
 # fjerner tulletegn fra en string
 
@@ -151,21 +150,24 @@ def testAllReviews(nbc, testDirectory):
         for file in glob.glob(str(d) + "/*.txt"):
             infile = open(file, encoding='utf-8', errors='ignore')
             a = infile.readline()
-            print (a)
             a_rm = remove_tags(a)
             a_new = a_rm.lower()
             a_new = remove_punctuation(a_new)
             a_new = a_new.split(' ')
+            print(totalCount)
             if d.name == "neg":
                 testresult = reviewClassifier(a_new, nbc.training, nbc.positiveMean, nbc.negativeMean, 0)
+                print(testresult)
             elif d.name == "pos":
                 testresult = reviewClassifier(a_new, nbc.training, nbc.positiveMean, nbc.negativeMean, 1)
+                print(testresult)
             if testresult>0.5:
                 correctCount+=1
             totalCount+=1
 
 
             infile.close()
+    print(correctCount)
     rate = float(correctCount) / float(totalCount) * 100
 
     return rate
