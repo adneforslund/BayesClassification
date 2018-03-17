@@ -18,7 +18,7 @@ def train(dirs):
     wordsTmp = []
     wordCounts = []
     out = {}
-    start = time.time()
+    print("Loading file contents...")
     for d in dirs:
         # Apner alle filer i en path,
         for file in glob.glob(str(d) + "/*.txt"):
@@ -44,27 +44,30 @@ def train(dirs):
         
     print("Counting occurences...")
     sys.stdout.flush()
-
+ 
     count = Counter(wordsTmp)
     total = Counter(word[0] for word in wordsTmp)
 
     for (w, c) in uniques:
         wordCounts.append((w, (count[(w, 0)], total[w])))
 
-    print("Loading time: " + str(time.time() - start) + "s.")
     return dict(wordCounts)
 
 # Words blir en liste med tuples (word, 0) eller (word, 1), hvor 0 er negativ og 1 er positiv
 
 # Lagre ferdig trent classifier til senere bruk
-def saveNBC(nbc, file):
-    file.open(file, 'w')
-    pickle.dump(nbc, file)
+def saveNBC(nbc, file_str):
+    f = open(file_str, 'wb')
+    pickle.dump(nbc, f)
+    f.close()
 
 # Laste ferdig trent classifier
-def loadNBC(file):
-    file.open(file, 'r')
-    return picke.load(file)
+def loadNBC(file_str):
+    f = open(file_str, 'rb')
+    nbc = picke.load(f)
+    f.close()
+    return nbc
+
 
 
 # rekner sannsynlighet
@@ -169,20 +172,25 @@ def error_handler(parser, arg):
         return open(arg, 'r')
 
 def main():
-    
+    isTest = False
+    isClassify = False
+    isTrain = False
     parser = ArgumentParser()
     parser.add_argument("-f", "--file", dest = "myPath",
-                        help="Give a path to your DATA directory", required = True
+                        help="Give a path to your DATA directory, required", required = True
                         )
-    parser.add_argument("-te", "--test", dest = "myTest", help="Give pathname to the DATA/ directory", required = False)
-    parser.add_argument("-cl", "--classify", dest = "myClassify", help="Classify one review given to stdin", required = False)
-    parser.add_argument("-tr", "--train", dest = "myTrain", help="Give pathname to DATA/ directory to train the classifier", required = False)
+    parser.add_argument("-te", "--test", help="Read from file directory and run test metrics", required = False, action = 'store_true')
+    parser.add_argument("-cl", "--classify", help="Classify one review given to stdin", required = False, action = 'store_true')
+    parser.add_argument("-tr", "--train", help="Read from file directory to train the classifier", required = False, action = 'store_true')
     args = parser.parse_args()
 
     path = args.myPath
-    test = args.myTest
-    classify = args.myClassify
-    train = args.myTrain
+    if args.test is not None:
+        isTest = True
+    if args.classify is not None:
+        isClassify = True
+    if args.train is not None:
+        isTrain = True
     
     try:
         dirs = pather(path)
@@ -190,24 +198,24 @@ def main():
         print("Invalid pathname, try again. ")
         sys.exit(0)
 
-    if train:
-        start = time.time() 
+    if isTrain:
+        start = time.time()
         nbc = train(dirs)
         positiveMean = mean(1, nbc)
         negativeMean = mean(0, nbc)
         nbc = NBC(positiveMean, negativeMean, dict)
         saveNBC(nbc, "nbc.txt")
-        print(time.time() - start)
+        print("Time used: {:.2f}s".format(time.time() - start))
 
-    elif test:
+    elif isTest:
         start = time.time() 
-        nbc = loadNBC(nbc, "nbc.txt")
+        nbc = loadNBC("nbc.txt")
         # Test her
-        print(time.time() - start)
+        print("Time used: {:.2f}s".format(time.time() - start))
 
-    elif classify:
+    elif isClassify:
         start = time.time() 
-        nbc = loadNBC(nbc, "nbc.txt")
+        nbc = loadNBC("nbc.txt")
         stdin = input()
         resultat = reviewClassifier()
         print("Sjanse for at reviewet er negativt: {:.2f}%\nSjanse for at reviewet er positivt: {:.2f}%\nTid brukt: {:.2f}s".format(resultat * 100, (1 - resultat) * 100, time.time() - start))
