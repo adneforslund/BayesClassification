@@ -136,14 +136,14 @@ def pather(path):
     dirs = [x for x in new_path.iterdir() if x.is_dir() and x.name ==
             "neg" or x.name == "pos"]
     for d in dirs:
-        print(d)
+        print("Path found: {}".format(d))
     sys.stdout.flush()
     return dirs
 
 def testAllReviews(nbc, testDirectory):
     totalCount = 0
     correctCount = 0
-    testresult=0
+    testresult = 0
     for d in testDirectory:
 
         # Apner alle filer i en path,
@@ -154,20 +154,16 @@ def testAllReviews(nbc, testDirectory):
             a_new = a_rm.lower()
             a_new = remove_punctuation(a_new)
             a_new = a_new.split(' ')
-            print(totalCount)
             if d.name == "neg":
                 testresult = reviewClassifier(a_new, nbc.training, nbc.positiveMean, nbc.negativeMean, 0)
-                print(testresult)
             elif d.name == "pos":
                 testresult = reviewClassifier(a_new, nbc.training, nbc.positiveMean, nbc.negativeMean, 1)
-                print(testresult)
-            if testresult>0.5:
+            if testresult > 0.5:
                 correctCount+=1
             totalCount+=1
 
 
             infile.close()
-    print(correctCount)
     rate = float(correctCount) / float(totalCount) * 100
 
     return rate
@@ -177,19 +173,20 @@ def reviewClassifier(review, wordlist, positive, negative, c):
     a_rm = remove_tags(review)
     a_new = a_rm.split(' ')
     sum = 0
-    total = len(a_new)
-    current = 0
+    total = 0
     for word in a_new:
-        current += 1
-        loading = (current / total) * 100
         word = word.lower()
         word = remove_punctuation(word)
         prob = classify(word, wordlist, positive, negative, c)
         if prob != -1.0:
             sum += prob
+            total += 1.0
         else:
             continue
-    return sum / len(a_new)
+    if total > 0:    
+        return sum / total
+    else:
+        return -1.0
 
 class NBC:
     def __init__(self, positiveMean, negativeMean, training):
@@ -210,7 +207,7 @@ def main():
     isTrain = False
     parser = ArgumentParser()
     parser.add_argument("-f", "--file", dest = "myPath",
-                        help="Give a path to your DATA directory, required", required = True
+                        help="Give a path to your review directory, required", required = True
                         )
     parser.add_argument("-te", "--test", help="Read from file directory and run test metrics", required = False, action = 'store_true')
     parser.add_argument("-cl", "--classify", help="Classify one review given to stdin", required = False, action = 'store_true')
@@ -219,7 +216,6 @@ def main():
 
     path = args.myPath
     if args.test:
-        print("srat")
         isTest = True
     if args.classify:
         isClassify = True
@@ -234,20 +230,21 @@ def main():
 
     if isTrain:
         start = time.time()
+        print("Running classification training...")
         nbc = train(dirs)
         positiveMean = mean(1, nbc)
         negativeMean = mean(0, nbc)
         nbc = NBC(positiveMean, negativeMean, nbc)
         saveNBC(nbc, "nbc.txt")
-        print("Time used: {:.2f}s".format(time.time() - start))
+        print("Done. Time used: {:.2f}s".format(time.time() - start))
 
     elif isTest:
-        start = time.time() 
+        start = time.time()
+        print("Loading training data...")
         nbc = loadNBC("nbc.txt")
-        # Test her
+        print("Running test classification. Please wait, do not turn off your computer. Please... (plz)")
         rate = testAllReviews(nbc, dirs)
-        print (rate)
-        print("Time used: {:.2f}s".format(time.time() - start))
+        print("Error rate: {:.2f}%\nTime used: {:.2f}s".format(100 - rate, time.time() - start))
 
     elif isClassify:
         nbc = loadNBC("nbc.txt")
