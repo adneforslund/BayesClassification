@@ -164,8 +164,12 @@ def main():
 
     args = parser.parse_args()
     
-    path = args.myFile
-    dirs = pather(path)
+    path = args.myPath
+    try:
+        dirs = pather(path)
+    except FileNotFoundError:
+        print("Invalid pathname, try again. ")
+        sys.exit(0)
     nbc = train(dirs)
 
     positiveMean = mean(1, nbc)
