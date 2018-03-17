@@ -58,13 +58,13 @@ def train(dirs):
 # Lagre ferdig trent classifier til senere bruk
 def saveNBC(nbc, file_str):
     f = open(file_str, 'wb')
-    pickle.dump(nbc, f)
+    pickle.dump(nbc, f, protocol=pickle.HIGHEST_PROTOCOL)
     f.close()
 
 # Laste ferdig trent classifier
 def loadNBC(file_str):
     f = open(file_str, 'rb')
-    nbc = picke.load(f)
+    nbc = pickle.load(f)
     f.close()
     return nbc
 
@@ -72,7 +72,7 @@ def loadNBC(file_str):
 
 # rekner sannsynlighet
 def probabilityPre(word, wordlist, c):
-    (icl, tot) = wordlist['word']
+    (icl, tot) = wordlist[word]
     if c == 0 and tot > 0:
         return float(icl) / float(tot)
     elif c == 1 and tot > 0:
@@ -101,6 +101,8 @@ def bayes(a, b, pre):
 
 
 def classify(word, wordlist, positive, negative, c):
+    if not word in wordlist:
+        return -1.0
     pre = probabilityPre(word, wordlist, c)
     mean = 0
     if c == 1:
@@ -148,7 +150,6 @@ def reviewClassifier(review, wordlist, positive, negative, c):
     for word in a_new:
         current += 1
         loading = (current / total) * 100
-        print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n" + str(int(loading)) + "%")
         word = word.lower()
         word = remove_punctuation(word)
         prob = classify(word, wordlist, positive, negative, c)
@@ -159,10 +160,10 @@ def reviewClassifier(review, wordlist, positive, negative, c):
     return sum / len(a_new)
 
 class NBC:
-    def __init__(self, positiveMean, negativeMean, dict):
+    def __init__(self, positiveMean, negativeMean, training):
         self.negativeMean = positiveMean
         self.positiveMean = negativeMean
-        self.dict = dict
+        self.training = training
 
 # prøver å få til errorhandling, men tar alt som errors
 def error_handler(parser, arg):
@@ -185,11 +186,12 @@ def main():
     args = parser.parse_args()
 
     path = args.myPath
-    if args.test is not None:
+    if args.test:
+        print("srat")
         isTest = True
-    if args.classify is not None:
+    if args.classify:
         isClassify = True
-    if args.train is not None:
+    if args.train:
         isTrain = True
     
     try:
@@ -203,7 +205,7 @@ def main():
         nbc = train(dirs)
         positiveMean = mean(1, nbc)
         negativeMean = mean(0, nbc)
-        nbc = NBC(positiveMean, negativeMean, dict)
+        nbc = NBC(positiveMean, negativeMean, nbc)
         saveNBC(nbc, "nbc.txt")
         print("Time used: {:.2f}s".format(time.time() - start))
 
@@ -214,10 +216,11 @@ def main():
         print("Time used: {:.2f}s".format(time.time() - start))
 
     elif isClassify:
-        start = time.time() 
         nbc = loadNBC("nbc.txt")
+        print("Skriv inn ditt review:")
         stdin = input()
-        resultat = reviewClassifier()
+        start = time.time() 
+        resultat = reviewClassifier(stdin, nbc.training, nbc.positiveMean, nbc.positiveMean, 0)
         print("Sjanse for at reviewet er negativt: {:.2f}%\nSjanse for at reviewet er positivt: {:.2f}%\nTid brukt: {:.2f}s".format(resultat * 100, (1 - resultat) * 100, time.time() - start))
         
 main()
