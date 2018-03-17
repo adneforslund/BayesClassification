@@ -159,12 +159,14 @@ def error_handler(parser, arg):
 def main():
     parser = ArgumentParser()
     parser.add_argument("-f", "--file", dest="myPath",
-                        help="Give a path to your DATA directory"
+                        help="Give a path to your DATA directory", required = True
                         )
-
+    parser.add_argument("-te", "--test", help="Give pathname to the DATA/ directory", description="Classify all reviews and display metrics from pathname")
+    parser.add_argument("-cl", "--classify",help="Classify one review given to stdin", required= False  )
+    parser.add_argument("-tr", "--train", help="Give pathname to DATA/ directory to train the classifier")
     args = parser.parse_args()
     
-    path = args.myFile
+    path = args.myPath
     dirs = pather(path)
     nbc = train(dirs)
 
