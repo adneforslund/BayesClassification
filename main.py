@@ -5,6 +5,7 @@ import os
 import re
 import sys
 import time
+import pickle
 from argparse import ArgumentParser
 from collections import Counter
 from pathlib import Path
@@ -54,6 +55,17 @@ def train(dirs):
     return dict(wordCounts)
 
 # Words blir en liste med tuples (word, 0) eller (word, 1), hvor 0 er negativ og 1 er positiv
+
+# Lagre ferdig trent classifier til senere bruk
+def saveNBC(nbc, file):
+    file.open(file, 'w')
+    pickle.dump(nbc, file)
+
+# Laste ferdig trent classifier
+def loadNBC(file):
+    file.open(file, 'r')
+    return picke.load(file)
+
 
 # rekner sannsynlighet
 def probabilityPre(word, wordlist, c):
@@ -184,20 +196,20 @@ def main():
         positiveMean = mean(1, nbc)
         negativeMean = mean(0, nbc)
         nbc = NBC(positiveMean, negativeMean, dict)
-        # Lagre training data
+        saveNBC(nbc, "nbc.txt")
         print(time.time() - start)
 
     elif test:
         start = time.time() 
-        # Last training data
+        nbc = loadNBC(nbc, "nbc.txt")
         # Test her
         print(time.time() - start)
 
     elif classify:
         start = time.time() 
-        # Last training data
-        # stdin = input()
-        # resultat = reviewClassifier()
-        print(time.time() - start)
-            
+        nbc = loadNBC(nbc, "nbc.txt")
+        stdin = input()
+        resultat = reviewClassifier()
+        print("Sjanse for at reviewet er negativt: {:.2f}%\nSjanse for at reviewet er positivt: {:.2f}%\nTid brukt: {:.2f}s".format(resultat * 100, (1 - resultat) * 100, time.time() - start))
+        
 main()
