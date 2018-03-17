@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- encoding: utf-8 -*-
 import codecs
 import glob
 import os
@@ -12,30 +12,68 @@ from pathlib import Path
 negativeMean = 0
 positiveMean = 0
 
-words = []
-wordsTmp = []
-wordCounts = []
+# Wordcounts
+def train(dirs):
+    wordsTmp = []
+    wordCounts = []
+    out = {}
+    start = time.time()
+    for d in dirs:
+        # Apner alle filer i en path,
+        for file in glob.glob(str(d) + "/*.txt"):
+            infile = open(file, encoding='utf-8', errors='ignore')
+            a = infile.readline()
+            a_rm = remove_tags(a)
+            a_new = a_rm.lower()
+            a_new = remove_punctuation(a_new)
+            a_new = a_new.split(' ')
+            for word in a_new:
+                if len(word) < 3:
+                    continue
+                if d.name == "neg":
+                    wordsTmp.append((word, 0))
+                else:
+                    wordsTmp.append((word, 1))
 
+            infile.close()
+
+    print("Getting unique words...")
+    sys.stdout.flush()
+    uniques = set(wordsTmp)
+        
+    print("Counting occurences...")
+    sys.stdout.flush()
+
+    count = Counter(wordsTmp)
+    total = Counter(word[0] for word in wordsTmp)
+
+    for (w, c) in uniques:
+        wordCounts.append((w, (count[(w, 0)], total[w])))
+
+    print("Loading time: " + str(time.time() - start) + "s.")
+    return dict(wordCounts)
 
 # Words blir en liste med tuples (word, 0) eller (word, 1), hvor 0 er negativ og 1 er positiv
 
 # rekner sannsynlighet
-
-
 def probabilityPre(word, wordlist, c):
-    for (w, c, icl, tot) in wordlist:
-        if w == word and tot > 0:
-            return float(icl) / float(tot)
+    (icl, tot) = wordlist['word']
+    if c == 0 and tot > 0:
+        return float(icl) / float(tot)
+    elif c == 1 and tot > 0:
+        return float(tot - icl) / float(tot)
     return -1.0
+
 # rekner gjennomsnitt
-
-
 def mean(c, wordlist):
+    # print(wordlist)
     counter = 0
     total = 0
-    for (w, cl, i, j) in wordlist:
-        if c == cl:
+    for w, (i, j) in wordlist.items():
+        if c == 0:
             counter += i
+        elif c == 1:
+            counter += j - i
         total += j
     return float(counter) / float(total)
 
@@ -47,13 +85,14 @@ def bayes(a, b, pre):
 # tar et ord i en review, sjekker om den er positiv eller negativ
 
 
-def classify(word, wordlist, c):
+def classify(word, wordlist, positive, negative, c):
     pre = probabilityPre(word, wordlist, c)
     mean = 0
     if c == 1:
-        mean = positiveMean
+        mean = positive
     else:
-        mean = negativeMean
+        mean = negative
+    print(mean)
     if pre == -1.0:
         return -1.0
     else:
@@ -83,8 +122,9 @@ def pather(path):
     for d in dirs:
         print(d)
     sys.stdout.flush()
+    return dirs
 
-def reviewClassifier(review, wordlist, c):
+def reviewClassifier(review, wordlist, positive, negative, c):
     a_rm = remove_tags(review)
     a_new = a_rm.split(' ')
     sum = 0
@@ -96,13 +136,18 @@ def reviewClassifier(review, wordlist, c):
         print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n" + str(int(loading)) + "%")
         word = word.lower()
         word = remove_punctuation(word)
-        prob = classify(word, wordlist, c)
+        prob = classify(word, wordlist, positive, negative, c)
         if prob != -1.0:
             sum += prob
         else:
             continue
     return sum / len(a_new)
 
+class NBC:
+    def __init__(self, positiveMean, negativeMean, dict):
+        self.negativeMean = positiveMean
+        self.positiveMean = negativeMean
+        self.dict = dict
 
 def main():
     parser = ArgumentParser()
@@ -110,9 +155,17 @@ def main():
                         help="Open specified file")
     args = parser.parse_args()
     path = args.myFile
-    pather(path)
- #   text = open(myFile)
- #   print(text.read())
+    dirs = pather(path)
+    nbc = train(dirs)
+
+    positiveMean = mean(1, nbc)
+    negativeMean = mean(0, nbc)
+
+    return 
+    start = time.time() 
+    print(time.time() - start)
+#   text = open(myFile)
+#   print(text.read())
 
 
 main()
