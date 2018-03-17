@@ -180,9 +180,12 @@ def main():
     parser.add_argument("-f", "--file", dest = "myPath",
                         help="Give a path to your DATA directory, required", required = True
                         )
-    parser.add_argument("-te", "--test", help="Read from file directory and run test metrics", required = False, action = 'store_true')
-    parser.add_argument("-cl", "--classify", help="Classify one review given to stdin", required = False, action = 'store_true')
-    parser.add_argument("-tr", "--train", help="Read from file directory to train the classifier", required = False, action = 'store_true')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("-te", "--test", help="Read from file directory and run test metrics", required = False, action = 'store_true')
+    group.add_argument("-cl", "--classify", help="Classify one review given to stdin",
+                       required=False, action='store_true')
+    group.add_argument("-tr", "--train", help="Read from file directory to train the classifier",
+                       required=False, action='store_true')
     args = parser.parse_args()
 
     path = args.myPath
