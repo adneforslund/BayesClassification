@@ -168,6 +168,11 @@ def main():
     
     path = args.myPath
     dirs = pather(path)
+    try:
+        dirs = pather(path)
+    except FileNotFoundError:
+        print("Invalid pathname, try again. ")
+        sys.exit(0)
     nbc = train(dirs)
 
     positiveMean = mean(1, nbc)
