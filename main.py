@@ -109,7 +109,6 @@ def classify(word, wordlist, positive, negative, c):
         mean = positive
     else:
         mean = negative
-    print(mean)
     if pre == -1.0:
         return -1.0
     else:
@@ -120,7 +119,7 @@ def classify(word, wordlist, positive, negative, c):
 
 def remove_tags(text):
     expression = re.compile(r'<[^>]+>')
-    return expression.sub('', text)
+    return expression.sub('', str(text))
 
 # fjerner tulletegn fra en string
 
@@ -137,27 +136,57 @@ def pather(path):
     dirs = [x for x in new_path.iterdir() if x.is_dir() and x.name ==
             "neg" or x.name == "pos"]
     for d in dirs:
-        print(d)
+        print("Path found: {}".format(d))
     sys.stdout.flush()
     return dirs
+
+def testAllReviews(nbc, testDirectory):
+    totalCount = 0
+    correctCount = 0
+    testresult = 0
+    for d in testDirectory:
+
+        # Apner alle filer i en path,
+        for file in glob.glob(str(d) + "/*.txt"):
+            infile = open(file, encoding='utf-8', errors='ignore')
+            a = infile.readline()
+            a_rm = remove_tags(a)
+            a_new = a_rm.lower()
+            a_new = remove_punctuation(a_new)
+            a_new = a_new.split(' ')
+            if d.name == "neg":
+                testresult = reviewClassifier(a_new, nbc.training, nbc.positiveMean, nbc.negativeMean, 0)
+            elif d.name == "pos":
+                testresult = reviewClassifier(a_new, nbc.training, nbc.positiveMean, nbc.negativeMean, 1)
+            if testresult > 0.5:
+                correctCount+=1
+            totalCount+=1
+
+
+            infile.close()
+    rate = float(correctCount) / float(totalCount) * 100
+
+    return rate
+
 
 def reviewClassifier(review, wordlist, positive, negative, c):
     a_rm = remove_tags(review)
     a_new = a_rm.split(' ')
     sum = 0
-    total = len(a_new)
-    current = 0
+    total = 0
     for word in a_new:
-        current += 1
-        loading = (current / total) * 100
         word = word.lower()
         word = remove_punctuation(word)
         prob = classify(word, wordlist, positive, negative, c)
         if prob != -1.0:
             sum += prob
+            total += 1.0
         else:
             continue
-    return sum / len(a_new)
+    if total > 0:    
+        return sum / total
+    else:
+        return -1.0
 
 class NBC:
     def __init__(self, positiveMean, negativeMean, training):
@@ -178,7 +207,7 @@ def main():
     isTrain = False
     parser = ArgumentParser()
     parser.add_argument("-f", "--file", dest = "myPath",
-                        help="Give a path to your DATA directory, required", required = True
+                        help="Give a path to your review directory, required", required = True
                         )
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-te", "--test", help="Read from file directory and run test metrics", required = False, action = 'store_true')
@@ -190,7 +219,6 @@ def main():
 
     path = args.myPath
     if args.test:
-        print("srat")
         isTest = True
     if args.classify:
         isClassify = True
@@ -205,18 +233,21 @@ def main():
 
     if isTrain:
         start = time.time()
+        print("Running classification training...")
         nbc = train(dirs)
         positiveMean = mean(1, nbc)
         negativeMean = mean(0, nbc)
         nbc = NBC(positiveMean, negativeMean, nbc)
         saveNBC(nbc, "nbc.txt")
-        print("Time used: {:.2f}s".format(time.time() - start))
+        print("Done. Time used: {:.2f}s".format(time.time() - start))
 
     elif isTest:
-        start = time.time() 
+        start = time.time()
+        print("Loading training data...")
         nbc = loadNBC("nbc.txt")
-        # Test her
-        print("Time used: {:.2f}s".format(time.time() - start))
+        print("Running test classification. Please wait, do not turn off your computer. Please... (plz)")
+        rate = testAllReviews(nbc, dirs)
+        print("Error rate: {:.2f}%\nTime used: {:.2f}s".format(100 - rate, time.time() - start))
 
     elif isClassify:
         nbc = loadNBC("nbc.txt")
