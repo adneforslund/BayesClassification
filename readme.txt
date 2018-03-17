@@ -8,5 +8,7 @@ To use this program, run it in the command line as python main.py with the follo
 main.py -h 
   -To get help useing the program
 
-main.py -f path/to/DATA
-  - 
+main.py -f path/to/DATA/
+  -To train the Bayes classifier, given 
+  
+main.py -cl , 
