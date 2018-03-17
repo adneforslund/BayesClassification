@@ -104,12 +104,18 @@ def reviewClassifier(review, wordlist, c):
     return sum / len(a_new)
 
 
+def error_handler(parser, arg):
+    if not os.path.exists(arg):
+        parser.error("The path given: %s is not valid" % arg)
+    
+
 def main():
     parser = ArgumentParser()
-    parser.add_argument("-f", "--file", dest="myFile",
-                        help="Open specified file")
+    parser.add_argument("-f", "--file", dest="myPath",
+                        help="Give a path to your DATA directory",
+                        type = lambda x: error_handler(parser,x))
     args = parser.parse_args()
-    path = args.myFile
+    path = args.myPath
     pather(path)
  #   text = open(myFile)
  #   print(text.read())
