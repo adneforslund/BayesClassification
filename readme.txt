@@ -12,7 +12,7 @@ main.py {-tr, --train} -f path/to/DATA/
   - Train the classifier, given a pathname to the top directory containing the train-folder
   - Makes a text-file, that is used for classification 
 
-main.py {-cl , --classify} -f path/to/DATA/
+main.py {-cl , --classify} -f path/to/the/review/
   -Use to classify one review, given a pathname to the review
   
 
