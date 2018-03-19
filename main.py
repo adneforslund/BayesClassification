@@ -74,7 +74,6 @@ def loadNBC(file_str):
 # rekner sannsynlighet
 def probabilityPre(word, wordlist, c):
     (icl, tot) = wordlist[word]
-
     if c == 0 and tot > 0:
         return float(icl) / float(tot)
     elif c == 1 and tot > 0:
@@ -110,13 +109,15 @@ def classify(words, wordlist, positive, negative, c):
         pre = probabilityPre(w, wordlist, 1)
         if pre <= 0.0:
             pre = 1.0
-        probProductPos *= pre
+        # Uses sum not product (as done in Introduction to Information Retrieval, a Stanford course book on NLP)
+        probProductPos += pre
 
         # Negative class
         pre = probabilityPre(w, wordlist, 0)
         if pre <= 0.0:
             pre = 1.0
-        probProductNeg *= pre
+        # Uses sum not product (as done in Introduction to Information Retrieval, a Stanford course book on NLP)
+        probProductNeg += pre
           
     denom = probProductNeg * negative + probProductPos * positive
     num = 0
@@ -130,7 +131,7 @@ def classify(words, wordlist, positive, negative, c):
     res = bayes(num, denom, cl)
     if res > 0.0:
         res = log(res)
-    return -res
+    return res
 
 # for a fjerne html/xml tags med regex, erstatter med mellomrom . Funker med fakka formatering ogsa
 def remove_tags(text):
@@ -170,14 +171,11 @@ def testAllReviews(nbc, testDirectory):
             a_new = a_rm.lower()
             a_new = remove_punctuation(a_new)
             a_new = a_new.split(' ')
-            if d.name == "neg":
-                testresult = reviewClassifier(a_new, nbc.training, nbc.positiveMean, nbc.negativeMean, 0)
-            elif d.name == "pos":
-                testresult = reviewClassifier(a_new, nbc.training, nbc.positiveMean, nbc.negativeMean, 1)
-            if testresult <= 1.0:
+            if d.name == "neg" and reviewClassifier(a_new, nbc.training, nbc.positiveMean, nbc.negativeMean) == 0:
+                correctCount+=1
+            elif d.name == "pos" and reviewClassifier(a_new, nbc.training, nbc.positiveMean, nbc.negativeMean) == 1:
                 correctCount+=1
             totalCount+=1
-
 
             infile.close()
     rate = float(correctCount) / float(totalCount) * 100
@@ -188,11 +186,16 @@ def tidyWord(w):
     w = w.lower()
     return remove_punctuation(w)
 
-def reviewClassifier(review, wordlist, positive, negative, c):
+def reviewClassifier(review, wordlist, positive, negative):
     a_rm = remove_tags(review)
     a_new = a_rm.split(' ')
     words = map(lambda w: tidyWord(w), a_new)
-    return classify(words, wordlist, positive, negative, c)
+    neg = classify(words, wordlist, positive, negative, 0)
+    pos = classify(words, wordlist, positive, negative, 1)
+    if neg > pos:
+        return 0
+    else:
+        return 1
 
 class NBC:
     def __init__(self, positiveMean, negativeMean, training):
@@ -260,7 +263,12 @@ def main():
         print("Skriv inn ditt review:")
         stdin = input()
         start = time.time() 
-        resultat = reviewClassifier(stdin, nbc.training, nbc.positiveMean, nbc.negativeMean, 0)
-        print("Sjanse for at reviewet er negativt: {:.2f}%\nSjanse for at reviewet er positivt: {:.2f}%\nTid brukt: {:.2f}s".format(resultat * 100, (1 - resultat) * 100, time.time() - start))
+        resultat = reviewClassifier(stdin, nbc.training, nbc.positiveMean, nbc.negativeMean)
+        if resultat == 0:
+            print("Reviewet er negativt.")
+        else:
+            print("Reviewet er positivt.")
+        print("Tid brukt: {:.2f}s".format(time.time() - start))
+        
         
 main()
