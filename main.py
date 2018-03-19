@@ -251,7 +251,7 @@ def main():
         start = time.time()
         print("Loading training data...")
         nbc = loadNBC("nbc.txt")
-        print("Running test classification. Please wait, do not turn off your computer. Please... (plz)")
+        print("Running test classification. Please wait, do not turn off your computer...")
         rate = testAllReviews(nbc, dirs)
         print("Error rate: {:.2f}%\nTime used: {:.2f}s".format(100 - rate, time.time() - start))
 
