@@ -14,7 +14,7 @@ main.py {-tr, --train} -f path/to/DATA/
 
 main.py {-cl , --classify} -f path/to/the/review/
   -Use to classify one review, given a pathname to the review
-  
+  - when the '-f' argument is not given, it will take in 
 
 main.py {-te, --test} -f path/to/DATA/
   -classify all the reviews in test directory in the DATA folder, give pathname to the DATA-folder
