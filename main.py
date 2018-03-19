@@ -110,17 +110,18 @@ def classify(words, wordlist, positive, negative, c):
         if pre <= 0.0:
             pre = 1.0
         # Uses sum not product (as done in Introduction to Information Retrieval, a Stanford course book on NLP)
-        probProductPos += pre
+        probProductPos *= pre
 
         # Negative class
         pre = probabilityPre(w, wordlist, 0)
         if pre <= 0.0:
             pre = 1.0
         # Uses sum not product (as done in Introduction to Information Retrieval, a Stanford course book on NLP)
-        probProductNeg += pre
+        probProductNeg *= pre
           
     denom = probProductNeg * negative + probProductPos * positive
     num = 0
+    
     if c == 1:
         num = probProductPos
         cl = positive
@@ -171,9 +172,9 @@ def testAllReviews(nbc, testDirectory):
             a_new = a_rm.lower()
             a_new = remove_punctuation(a_new)
             a_new = a_new.split(' ')
-            if d.name == "neg" and reviewClassifier(a_new, nbc.training, nbc.positiveMean, nbc.negativeMean) == 0:
+            if d.name == "neg" and reviewClassifier(a_new, nbc.training, nbc.positiveMean, nbc.negativeMean) < 0.5:
                 correctCount+=1
-            elif d.name == "pos" and reviewClassifier(a_new, nbc.training, nbc.positiveMean, nbc.negativeMean) == 1:
+            elif d.name == "pos" and reviewClassifier(a_new, nbc.training, nbc.positiveMean, nbc.negativeMean) > 0.5:
                 correctCount+=1
             totalCount+=1
 
@@ -192,15 +193,13 @@ def reviewClassifier(review, wordlist, positive, negative):
     words = map(lambda w: tidyWord(w), a_new)
     neg = classify(words, wordlist, positive, negative, 0)
     pos = classify(words, wordlist, positive, negative, 1)
-    if neg > pos:
-        return 0
-    else:
-        return 1
+    relativeFreq = neg / (neg + pos)
+    return relativeFreq
 
 class NBC:
     def __init__(self, positiveMean, negativeMean, training):
-        self.negativeMean = positiveMean
-        self.positiveMean = negativeMean
+        self.negativeMean = negativeMean
+        self.positiveMean = positiveMean
         self.training = training
 
 # prøver å få til errorhandling, men tar alt som errors
@@ -263,12 +262,12 @@ def main():
         print("Skriv inn ditt review:")
         stdin = input()
         start = time.time() 
-        resultat = reviewClassifier(stdin, nbc.training, nbc.positiveMean, nbc.negativeMean)
-        if resultat == 0:
-            print("Reviewet er negativt.")
+        res = reviewClassifier(stdin, nbc.training, nbc.positiveMean, nbc.negativeMean)
+        if res < 0.5:
+            print("The review is negative. Certainty: {:.2f}%".format((1 - res) * 100))
         else:
-            print("Reviewet er positivt.")
-        print("Tid brukt: {:.2f}s".format(time.time() - start))
+            print("The review is positive. Certainty: {:.2f}%".format(res * 100))
+        print("Time used: {:.2f}s".format(time.time() - start))
         
         
 main()
