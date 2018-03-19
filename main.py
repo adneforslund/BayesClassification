@@ -174,7 +174,7 @@ def testAllReviews(nbc, testDirectory):
                 testresult = reviewClassifier(a_new, nbc.training, nbc.positiveMean, nbc.negativeMean, 0)
             elif d.name == "pos":
                 testresult = reviewClassifier(a_new, nbc.training, nbc.positiveMean, nbc.negativeMean, 1)
-            if testresult >= 1.0:
+            if testresult <= 1.0:
                 correctCount+=1
             totalCount+=1
 
@@ -260,7 +260,7 @@ def main():
         print("Skriv inn ditt review:")
         stdin = input()
         start = time.time() 
-        resultat = reviewClassifier(stdin, nbc.training, nbc.positiveMean, nbc.positiveMean, 0)
+        resultat = reviewClassifier(stdin, nbc.training, nbc.positiveMean, nbc.negativeMean, 0)
         print("Sjanse for at reviewet er negativt: {:.2f}%\nSjanse for at reviewet er positivt: {:.2f}%\nTid brukt: {:.2f}s".format(resultat * 100, (1 - resultat) * 100, time.time() - start))
         
 main()
