@@ -124,6 +124,7 @@ def classify(words, wordlist, positive, negative, c):
         num = probProductPos
         cl = positive
     else:
+
         num = probProductNeg
         cl = negative
 
@@ -135,7 +136,7 @@ def classify(words, wordlist, positive, negative, c):
 # for a fjerne html/xml tags med regex, erstatter med mellomrom . Funker med fakka formatering ogsa
 def remove_tags(text):
     expression = re.compile(r'<[^>]+>')
-    return expression.sub('', str(text))
+    return expression.sub('', text)
 
 # fjerner tulletegn fra en string
 
@@ -152,7 +153,7 @@ def pather(path):
     dirs = [x for x in new_path.iterdir() if x.is_dir() and x.name ==
             "neg" or x.name == "pos"]
     for d in dirs:
-        print("Path found: {}".format(d))
+        print(d)
     sys.stdout.flush()
     return dirs
 
@@ -213,7 +214,7 @@ def main():
     isTrain = False
     parser = ArgumentParser()
     parser.add_argument("-f", "--file", dest = "myPath",
-                        help="Give a path to your review directory, required", required = True
+                        help="Give a path to your DATA directory, required", required = True
                         )
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-te", "--test", help="Read from file directory and run test metrics", required = False, action = 'store_true')
@@ -225,6 +226,7 @@ def main():
 
     path = args.myPath
     if args.test:
+        print("srat")
         isTest = True
     if args.classify:
         isClassify = True
@@ -239,28 +241,28 @@ def main():
 
     if isTrain:
         start = time.time()
-        print("Running classification training...")
         nbc = train(dirs)
         positiveMean = mean(1, nbc)
         negativeMean = mean(0, nbc)
         nbc = NBC(positiveMean, negativeMean, nbc)
         saveNBC(nbc, "nbc.txt")
-        print("Done. Time used: {:.2f}s".format(time.time() - start))
+        print("Time used: {:.2f}s".format(time.time() - start))
 
     elif isTest:
-        start = time.time()
-        print("Loading training data...")
+        start = time.time() 
         nbc = loadNBC("nbc.txt")
         print("Running test classification. Please wait, do not turn off your computer...")
         rate = testAllReviews(nbc, dirs)
         print("Error rate: {:.2f}%\nTime used: {:.2f}s".format(100 - rate, time.time() - start))
+        # Test her
+        print("Time used: {:.2f}s".format(time.time() - start))
 
     elif isClassify:
         nbc = loadNBC("nbc.txt")
-        print("Skriv inn ditt review:")
+        print("Write your review:")
         stdin = input()
         start = time.time() 
         resultat = reviewClassifier(stdin, nbc.training, nbc.positiveMean, nbc.positiveMean, 0)
-        print("Sjanse for at reviewet er negativt: {:.2f}%\nSjanse for at reviewet er positivt: {:.2f}%\nTid brukt: {:.2f}s".format(resultat * 100, (1 - resultat) * 100, time.time() - start))
+        print("Chance that the review is negative: {:.2f}%\nChance that the review is positive: {:.2f}%\nTime used: {:.2f}s".format(resultat * 100, (1 - resultat) * 100, time.time() - start))
         
 main()
