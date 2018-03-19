@@ -6,6 +6,7 @@ import re
 import sys
 import time
 import pickle
+from math import log
 from argparse import ArgumentParser
 from collections import Counter
 from pathlib import Path
@@ -73,6 +74,7 @@ def loadNBC(file_str):
 # rekner sannsynlighet
 def probabilityPre(word, wordlist, c):
     (icl, tot) = wordlist[word]
+
     if c == 0 and tot > 0:
         return float(icl) / float(tot)
     elif c == 1 and tot > 0:
@@ -93,30 +95,44 @@ def mean(c, wordlist):
     return float(counter) / float(total)
 
 # bayes regel : https://cdn-images-1.medium.com/max/1600/1*9YuCNcICo5PW5qqQug6Yqw.png
-
-
 def bayes(a, b, pre):
     return (a*pre)/b
+
 # tar et ord i en review, sjekker om den er positiv eller negativ
+def classify(words, wordlist, positive, negative, c):
+    probProductPos = 1.0
+    probProductNeg = 1.0
+    pre = 0.0
+    for w in words:
+        if not w in wordlist:
+            continue
+        # Positive class
+        pre = probabilityPre(w, wordlist, 1)
+        if pre <= 0.0:
+            pre = 1.0
+        probProductPos *= pre
 
-
-def classify(word, wordlist, positive, negative, c):
-    if not word in wordlist:
-        return -1.0
-    pre = probabilityPre(word, wordlist, c)
-    mean = 0
+        # Negative class
+        pre = probabilityPre(w, wordlist, 0)
+        if pre <= 0.0:
+            pre = 1.0
+        probProductNeg *= pre
+          
+    denom = probProductNeg * negative + probProductPos * positive
+    num = 0
     if c == 1:
-        mean = positive
+        num = probProductPos
+        cl = positive
     else:
-        mean = negative
-    if pre == -1.0:
-        return -1.0
-    else:
-        return bayes(0.5, mean, pre)
+        num = probProductNeg
+        cl = negative
+
+    res = bayes(num, denom, cl)
+    if res > 0.0:
+        res = log(res)
+    return -res
 
 # for a fjerne html/xml tags med regex, erstatter med mellomrom . Funker med fakka formatering ogsa
-
-
 def remove_tags(text):
     expression = re.compile(r'<[^>]+>')
     return expression.sub('', str(text))
@@ -158,7 +174,7 @@ def testAllReviews(nbc, testDirectory):
                 testresult = reviewClassifier(a_new, nbc.training, nbc.positiveMean, nbc.negativeMean, 0)
             elif d.name == "pos":
                 testresult = reviewClassifier(a_new, nbc.training, nbc.positiveMean, nbc.negativeMean, 1)
-            if testresult > 0.5:
+            if testresult <= 1.0:
                 correctCount+=1
             totalCount+=1
 
@@ -168,25 +184,15 @@ def testAllReviews(nbc, testDirectory):
 
     return rate
 
+def tidyWord(w):
+    w = w.lower()
+    return remove_punctuation(w)
 
 def reviewClassifier(review, wordlist, positive, negative, c):
     a_rm = remove_tags(review)
     a_new = a_rm.split(' ')
-    sum = 0
-    total = 0
-    for word in a_new:
-        word = word.lower()
-        word = remove_punctuation(word)
-        prob = classify(word, wordlist, positive, negative, c)
-        if prob != -1.0:
-            sum += prob
-            total += 1.0
-        else:
-            continue
-    if total > 0:    
-        return sum / total
-    else:
-        return -1.0
+    words = map(lambda w: tidyWord(w), a_new)
+    return classify(words, wordlist, positive, negative, c)
 
 class NBC:
     def __init__(self, positiveMean, negativeMean, training):
