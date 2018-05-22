@@ -14,7 +14,6 @@ from pathlib import Path
 negativeMean = 0
 positiveMean = 0
 
-
 def train(dirs):
     wordsTmp = []
     wordCounts = []
@@ -54,6 +53,13 @@ def train(dirs):
 
     return dict(wordCounts)
 
+
+
+class NBC:
+    def __init__(self, positiveMean, negativeMean, training):
+        self.negativeMean = negativeMean
+        self.positiveMean = positiveMean
+        self.training = training
 
 def saveNBC(nbc, file_str):
     f = open(file_str, 'wb')
@@ -193,13 +199,6 @@ def reviewClassifier(review, wordlist, positive, negative):
     pos = classify(words, wordlist, positive, negative, 1)
     relativeFreq = neg / (neg + pos)
     return relativeFreq
-
-class NBC:
-    def __init__(self, positiveMean, negativeMean, training):
-        self.negativeMean = negativeMean
-        self.positiveMean = positiveMean
-        self.training = training
-
 
 def error_handler(parser, arg):
     if not os.path.exists(arg):
