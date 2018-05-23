@@ -81,7 +81,7 @@ def save_NBC(nbc, file_str):
     pickle.dump(nbc, f, protocol=pickle.HIGHEST_PROTOCOL)
     f.close()
 
-
+# reads the NBC file for classifying reviews.
 def load_nbc(file_str):
     f = open(file_str, 'rb')
     nbc = pickle.load(f)
@@ -113,7 +113,7 @@ def mean(c, word_list):
         total += j
     return float(counter) / float(total)
 
-
+# bayes theorem
 def bayes(a, b, pre):
     return (a*pre)/b
 
@@ -177,12 +177,12 @@ def remove_punctuation(text):
 # iterates through all files in a given path
 def pather(path):
     new_path = Path(path)
-    dirs = [x for x in new_path.iterdir() if x.is_dir() and x.name ==
+    directories = [x for x in new_path.iterdir() if x.is_dir() and x.name ==
             "neg" or x.name == "pos"]
-    for d in dirs:
+    for d in directories:
         print("Path found: {}".format(d))
     sys.stdout.flush()
-    return dirs
+    return directories
 
 def testAllReviews(nbc, path):
     toktok = ToktokTokenizer()    
@@ -217,7 +217,7 @@ def testAllReviews(nbc, path):
     rate = float(correctCount) / float(totalCount) * 100
 
     return rate
-
+# makes everything lower case
 def tidyWord(w):
     w = w.lower()
     return remove_punctuation(w)
@@ -237,6 +237,7 @@ def error_handler(parser, arg):
     else:
         return open(arg, 'r')
 
+# main method
 def main():
     is_test = False
     is_classify = False
