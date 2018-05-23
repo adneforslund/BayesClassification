@@ -14,13 +14,13 @@ from pathlib import Path
 negative_mean = 0
 positive_mean = 0
 
-
-def train(dirs):
+# for traing the program on the train set
+def train(directories):
     words_temp = []
     words_count = []
     out = {}
     print("Loading file contents...")
-    for d in dirs:
+    for d in directories:
         
         for file in glob.glob(str(d) + "/*.txt"):
             infile = open(file, encoding='utf-8', errors='ignore')
@@ -55,13 +55,13 @@ def train(dirs):
 
     return dict(words_count)
 
-
+# makes a NBC file with results from the training, to be read later.
 def save_NBC(nbc, file_str):
     f = open(file_str, 'wb')
     pickle.dump(nbc, f, protocol=pickle.HIGHEST_PROTOCOL)
     f.close()
 
-
+# reads the NBC file for classifying reviews.
 def load_nbc(file_str):
     f = open(file_str, 'rb')
     nbc = pickle.load(f)
@@ -92,7 +92,7 @@ def mean(c, word_list):
         total += j
     return float(counter) / float(total)
 
-
+# bayes theorem
 def bayes(a, b, pre):
     return (a*pre)/b
 
@@ -128,15 +128,15 @@ def classify(words, word_list, positive, negative, c):
         num = probability_product_negative
         cl = negative
 
-    res = bayes(num, denom, cl)
-    if res > 0.0:
-        res = log(res)
-    return res
+    result = bayes(num, denom, cl)
+    if result > 0.0:
+        result = log(result)
+    return result
 
 # removes HTML/XML tags from string
 def remove_tags(text):
-    expression = re.compile(r'<[^>]+>')
-    return expression.sub('', str(text))
+    expresultsion = re.compile(r'<[^>]+>')
+    return expresultsion.sub('', str(text))
 
 
 
@@ -150,12 +150,12 @@ def remove_punctuation(text):
 # iterates through all files in a given path
 def pather(path):
     new_path = Path(path)
-    dirs = [x for x in new_path.iterdir() if x.is_dir() and x.name ==
+    directories = [x for x in new_path.iterdir() if x.is_dir() and x.name ==
             "neg" or x.name == "pos"]
-    for d in dirs:
+    for d in directories:
         print("Path found: {}".format(d))
     sys.stdout.flush()
-    return dirs
+    return directories
 
 def testAllReviews(nbc, testDirectory):
     totalCount = 0
@@ -181,7 +181,7 @@ def testAllReviews(nbc, testDirectory):
     rate = float(correctCount) / float(totalCount) * 100
 
     return rate
-
+# makes everything lower case
 def tidyWord(w):
     w = w.lower()
     return remove_punctuation(w)
@@ -194,7 +194,7 @@ def reviewClassifier(review, word_list, positive, negative):
     pos = classify(words, word_list, positive, negative, 1)
     relativeFreq = neg / (neg + pos)
     return relativeFreq
-
+# the NBC class 
 class NBC:
     def __init__(self, positive_mean, negative_mean, training):
         self.negative_mean = negative_mean
@@ -208,6 +208,7 @@ def error_handler(parser, arg):
     else:
         return open(arg, 'r')
 
+# main method
 def main():
     is_test = False
     is_classify = False
@@ -233,7 +234,7 @@ def main():
         is_train = True
     
     try:
-        dirs = pather(path)
+        directories = pather(path)
     except FileNotFoundError:
         print("Invalid pathname, try again. ")
         sys.exit(0)
@@ -241,7 +242,7 @@ def main():
     if is_train:
         start = time.time()
         print("Running classification training...")
-        nbc = train(dirs)
+        nbc = train(directories)
         positive_mean = mean(1, nbc)
         negative_mean = mean(0, nbc)
         nbc = NBC(positive_mean, negative_mean, nbc)
@@ -253,7 +254,7 @@ def main():
         print("Loading training data...")
         nbc = load_nbc("nbc.txt")
         print("Running test classification. Please wait, do not turn off your computer...")
-        rate = testAllReviews(nbc, dirs)
+        rate = testAllReviews(nbc, directories)
         print("Error rate: {:.2f}%\nTime used: {:.2f}s".format(100 - rate, time.time() - start))
 
     elif is_classify:
@@ -261,11 +262,11 @@ def main():
         print("Skriv inn ditt review:")
         stdin = input()
         start = time.time() 
-        res = reviewClassifier(stdin, nbc.training, nbc.positive_mean, nbc.negative_mean)
-        if res < 0.5:
-            print("The review is negative. Certainty: {:.2f}%".format((1 - res) * 100))
+        result = reviewClassifier(stdin, nbc.training, nbc.positive_mean, nbc.negative_mean)
+        if result < 0.5:
+            print("The review is negative. Certainty: {:.2f}%".format((1 - result) * 100))
         else:
-            print("The review is positive. Certainty: {:.2f}%".format(res * 100))
+            print("The review is positive. Certainty: {:.2f}%".format(result * 100))
         print("Time used: {:.2f}s".format(time.time() - start))
         
         
