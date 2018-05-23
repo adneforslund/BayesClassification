@@ -10,29 +10,46 @@ from math import log
 from argparse import ArgumentParser
 from collections import Counter
 from pathlib import Path
+from nltk.corpus import wordnet
+from nltk.tokenize import ToktokTokenizer
 
 negative_mean = 0
 positive_mean = 0
 
-# for traing the program on the train set
-def train(directories):
+def in_vocabulary(word, vocabulary):
+    if word in vocabulary:
+        return True
+    else:
+        return False
+
+def train(path):
     words_temp = []
     words_count = []
     out = {}
     print("Loading file contents...")
-    for d in directories:
-        
-        for file in glob.glob(str(d) + "/*.txt"):
+    toktok = ToktokTokenizer()
+
+    try:
+        dirs = pather(path + "/train")
+        vocabulary = set(open(str(path) + "imdb.vocab", encoding='utf-8', errors='ignore').read().splitlines())
+        print(vocabulary)
+    except FileNotFoundError:
+        print("Invalid pathname, try again. ")
+        sys.exit(0)
+
+    print("Loaded paths and vocabulary from data folder.")
+    print("Running training, this may take a while...") 
+
+    for directory in dirs:
+        print("Training from directory: " + directory.name) 
+        for file in glob.glob(str(directory) + "/*.txt"):
             infile = open(file, encoding='utf-8', errors='ignore')
-            a = infile.readline()
-            a_rm = remove_tags(a)
-            a_new = a_rm.lower()
-            a_new = remove_punctuation(a_new)
-            a_new = a_new.split(' ')
-            for word in a_new:
-                if len(word) < 3:
+            line = infile.readline()
+            tokens = toktok.tokenize(line)
+            for word in tokens:
+                if len(word) < 3 or not in_vocabulary(word, vocabulary):
                     continue
-                if d.name == "neg":
+                if directory.name == "neg":
                     words_temp.append((word, 0))
                 else:
                     words_temp.append((word, 1))
@@ -55,7 +72,13 @@ def train(directories):
 
     return dict(words_count)
 
-# makes a NBC file with results from the training, to be read later.
+
+class NBC:
+    def __init__(self, positive_mean, negative_mean, training):
+        self.negative_mean = negative_mean
+        self.positive_mean = positive_mean
+        self.training = training
+
 def save_NBC(nbc, file_str):
     f = open(file_str, 'wb')
     pickle.dump(nbc, f, protocol=pickle.HIGHEST_PROTOCOL)
@@ -72,11 +95,12 @@ def load_nbc(file_str):
 
 
 def probability_pre(word, word_list, c):
-    (icl, tot) = word_list[word]
-    if c == 0 and tot > 0:
-        return float(icl) / float(tot)
-    elif c == 1 and tot > 0:
-        return float(tot - icl) / float(tot)
+    if word in word_list:
+        (icl, tot) = word_list[word]
+        if c == 0 and tot > 0:
+            return float(icl) / float(tot)
+        elif c == 1 and tot > 0:
+            return float(tot - icl) / float(tot)
     return -1.0
 
 
@@ -100,25 +124,28 @@ def bayes(a, b, pre):
 def classify(words, word_list, positive, negative, c):
     probability_product_positive = 1.0
     probability_product_negative = 1.0
-    pre = 0.0
-    for w in words:
-        if not w in word_list:
+    pre = 1.0
+
+    if len(words) == 0:
+        return -1.0
+
+    for w in words: 
+        if len(w) < 3:
             continue
-      
         pre = probability_pre(w, word_list, 1)
         if pre <= 0.0:
             pre = 1.0
         
         probability_product_positive *= pre
-
        
         pre = probability_pre(w, word_list, 0)
         if pre <= 0.0:
             pre = 1.0
       
         probability_product_negative *= pre
-          
+   
     denom = probability_product_negative * negative + probability_product_positive * positive
+   
     num = 0
     
     if c == 1:
@@ -128,10 +155,15 @@ def classify(words, word_list, positive, negative, c):
         num = probability_product_negative
         cl = negative
 
-    result = bayes(num, denom, cl)
-    if result > 0.0:
-        result = log(result)
-    return result
+    if denom > 0.0:
+        res = bayes(num, denom, cl)
+    else:
+        return -1.0
+    if res > 0.0:
+        res = log(res)
+    else:
+        return -1.0
+    return res
 
 # removes HTML/XML tags from string
 def remove_tags(text):
@@ -157,23 +189,32 @@ def pather(path):
     sys.stdout.flush()
     return directories
 
-def testAllReviews(nbc, testDirectory):
+def testAllReviews(nbc, path):
+    toktok = ToktokTokenizer()    
+    try:
+        dirs = pather(path + "/test")
+    except FileNotFoundError:
+        print("Invalid pathname, try again. ")
+        sys.exit(0)
     totalCount = 0
     correctCount = 0
     
-    for d in testDirectory:
 
+    for directory in dirs:
         # Apner alle filer i en path,
-        for file in glob.glob(str(d) + "/*.txt"):
+        print("Testing from directory: " + str(directory))
+        for file in glob.glob(str(directory) + "/*.txt"):
             infile = open(file, encoding='utf-8', errors='ignore')
-            a = infile.readline()
-            a_rm = remove_tags(a)
-            a_new = a_rm.lower()
-            a_new = remove_punctuation(a_new)
-            a_new = a_new.split(' ')
-            if d.name == "neg" and reviewClassifier(a_new, nbc.training, nbc.positive_mean, nbc.negative_mean) < 0.5:
+            line = infile.readline()
+            words = toktok.tokenize(line)
+
+            classification = reviewClassifier(words, nbc.training, nbc.positive_mean, nbc.negative_mean)
+
+            if classification == -1.0:
+                 continue
+            elif directory.name == "neg" and classification < 0.5:
                 correctCount+=1
-            elif d.name == "pos" and reviewClassifier(a_new, nbc.training, nbc.positive_mean, nbc.negative_mean) > 0.5:
+            elif directory.name == "pos" and classification > 0.5:
                 correctCount+=1
             totalCount+=1
 
@@ -187,20 +228,13 @@ def tidyWord(w):
     return remove_punctuation(w)
 
 def reviewClassifier(review, word_list, positive, negative):
-    a_rm = remove_tags(review)
-    a_new = a_rm.split(' ')
-    words = map(lambda w: tidyWord(w), a_new)
-    neg = classify(words, word_list, positive, negative, 0)
-    pos = classify(words, word_list, positive, negative, 1)
-    relativeFreq = neg / (neg + pos)
+    neg = classify(review, word_list, positive, negative, 0)
+    pos = classify(review, word_list, positive, negative, 1)
+    if neg == -1.0 or pos == -1.0:
+       relativeFreq = -1.0
+    else:
+       relativeFreq = neg / (neg + pos)
     return relativeFreq
-# the NBC class 
-class NBC:
-    def __init__(self, positive_mean, negative_mean, training):
-        self.negative_mean = negative_mean
-        self.positive_mean = positive_mean
-        self.training = training
-
 
 def error_handler(parser, arg):
     if not os.path.exists(arg):
@@ -215,7 +249,7 @@ def main():
     is_train = False
     parser = ArgumentParser()
     parser.add_argument("-f", "--file", dest = "myPath",
-                        help="Give a path to your review directory, required", required = True
+                        help="Give a path to dataset directory, required", required = True
                         )
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-te", "--test", help="Read from file directory and run test metrics", required = False, action = 'store_true')
@@ -233,16 +267,11 @@ def main():
     if args.train:
         is_train = True
     
-    try:
-        directories = pather(path)
-    except FileNotFoundError:
-        print("Invalid pathname, try again. ")
-        sys.exit(0)
 
     if is_train:
         start = time.time()
         print("Running classification training...")
-        nbc = train(directories)
+        nbc = train(path)
         positive_mean = mean(1, nbc)
         negative_mean = mean(0, nbc)
         nbc = NBC(positive_mean, negative_mean, nbc)
@@ -254,7 +283,7 @@ def main():
         print("Loading training data...")
         nbc = load_nbc("nbc.txt")
         print("Running test classification. Please wait, do not turn off your computer...")
-        rate = testAllReviews(nbc, directories)
+        rate = testAllReviews(nbc, path)
         print("Error rate: {:.2f}%\nTime used: {:.2f}s".format(100 - rate, time.time() - start))
 
     elif is_classify:
@@ -262,11 +291,13 @@ def main():
         print("Skriv inn ditt review:")
         stdin = input()
         start = time.time() 
-        result = reviewClassifier(stdin, nbc.training, nbc.positive_mean, nbc.negative_mean)
-        if result < 0.5:
-            print("The review is negative. Certainty: {:.2f}%".format((1 - result) * 100))
+        res = reviewClassifier(stdin, nbc.training, nbc.positive_mean, nbc.negative_mean)
+        if res == -1.0:
+            print("The review could not be read, doesn't contain any known words")
+        elif res < 0.5:
+            print("The review is negative. Certainty: {:.2f}%".format((1 - res) * 100))
         else:
-            print("The review is positive. Certainty: {:.2f}%".format(result * 100))
+            print("The review is positive. Certainty: {:.2f}%".format(res * 100))
         print("Time used: {:.2f}s".format(time.time() - start))
         
         
