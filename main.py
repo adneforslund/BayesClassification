@@ -10,8 +10,6 @@ from math import log
 from argparse import ArgumentParser
 from collections import Counter
 from pathlib import Path
-from nltk.corpus import wordnet
-from nltk.tokenize import ToktokTokenizer
 
 negative_mean = 0
 positive_mean = 0
@@ -32,7 +30,6 @@ def train(path):
     try:
         dirs = pather(path + "/train")
         vocabulary = set(open(str(path) + "imdb.vocab", encoding='utf-8', errors='ignore').read().splitlines())
-        print(vocabulary)
     except FileNotFoundError:
         print("Invalid pathname, try again. ")
         sys.exit(0)
@@ -45,7 +42,7 @@ def train(path):
         for file in glob.glob(str(directory) + "/*.txt"):
             infile = open(file, encoding='utf-8', errors='ignore')
             line = infile.readline()
-            tokens = toktok.tokenize(line)
+            tokens = split(line)
             for word in tokens:
                 if len(word) < 3 or not in_vocabulary(word, vocabulary):
                     continue
@@ -166,11 +163,9 @@ def classify(words, word_list, positive, negative, c):
     return res
 
 # removes HTML/XML tags from string
-def remove_tags(text):
-    expression = re.compile(r'<[^>]+>')
-    return expression.sub('', str(text))
-
-
+def split(text):
+    expression = re.compile("[\w'|\w]+")
+    return expression.findall(str(text))
 
 # removes special characters from string
 def remove_punctuation(text):
@@ -206,7 +201,7 @@ def testAllReviews(nbc, path):
         for file in glob.glob(str(directory) + "/*.txt"):
             infile = open(file, encoding='utf-8', errors='ignore')
             line = infile.readline()
-            words = toktok.tokenize(line)
+            words = split(line)
 
             classification = reviewClassifier(words, nbc.training, nbc.positive_mean, nbc.negative_mean)
 
