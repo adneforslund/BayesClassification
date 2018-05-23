@@ -161,16 +161,12 @@ def classify(words, word_list, positive, negative, c):
         return -1.0
     return res
 
-# removes HTML/XML tags from string
+# takes words from text, removes everything else. 
 def split(text):
     expression = re.compile("[\w'|\w]+")
     return expression.findall(str(text))
 
-# removes special characters from string
-def remove_punctuation(text):
-    for p in [',', '!', '"', '.', '?', ')', '(', '-', "'s", ":", ";"]:
-        text = text.replace(p, '')
-    return text
+
 
 
 # iterates through all files in a given path
@@ -215,10 +211,8 @@ def testAllReviews(nbc, path):
     rate = float(correctCount) / float(totalCount) * 100
 
     return rate
-# makes everything lower case
-def tidyWord(w):
-    w = w.lower()
-    return remove_punctuation(w)
+
+
 
 def reviewClassifier(review, word_list, positive, negative):
     neg = classify(review, word_list, positive, negative, 0)
