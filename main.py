@@ -25,8 +25,7 @@ def train(path):
     words_count = []
     out = {}
     print("Loading file contents...")
-    toktok = ToktokTokenizer()
-
+ 
     try:
         dirs = pather(path + "/train")
         vocabulary = set(open(str(path) + "imdb.vocab", encoding='utf-8', errors='ignore').read().splitlines())
@@ -185,7 +184,6 @@ def pather(path):
     return directories
 
 def testAllReviews(nbc, path):
-    toktok = ToktokTokenizer()    
     try:
         dirs = pather(path + "/test")
     except FileNotFoundError:
