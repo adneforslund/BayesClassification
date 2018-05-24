@@ -194,6 +194,10 @@ def testAllReviews(nbc, path):
     numbers_of_files_review = 0
     number_of_positive_reviews = 0
     number_of_negative_reviews = 0
+
+    positive_count = 0
+    negative_count = 0
+    
     for directory in dirs:
         # Apner alle filer i en path,
         print("Testing from directory: " + str(directory))
@@ -208,21 +212,28 @@ def testAllReviews(nbc, path):
                 number_of_negative_reviews+=1
             elif directory.name == "pos":
                 number_of_positive_reviews+=1
-
-
+            
             if classification == -1.0:
                  continue
-            elif directory.name == "neg" and classification < 0.5:
-                correctCount+=1
-            elif directory.name == "pos" and classification > 0.5:
-                correctCount+=1
+            elif classification < 0.5:
+                negative_count +=1
+                if directory.name == "neg":
+                    correctCount+=1
+                
+            elif classification > 0.5:
+                positive_count += 1
+                if directory.name == "pos":
+                    correctCount+=1
+                
             totalCount+=1
 
             infile.close()
     rate = float(correctCount) / float(totalCount) * 100
     print("Number of reviews classified: "+str(numbers_of_files_review))
-    print("Number of positive reviews: " + str(number_of_positive_reviews))
-    print("Number of negative reviews: "+ str(number_of_negative_reviews))
+    print("Number of positive reviews in total: "+ str(number_of_positive_reviews) + ". Number of positive classifications: "+str(positive_count) )
+    print("Number of negative reviews in total: " + str(number_of_negative_reviews) +
+          ". Number of negative classifications: "+str(negative_count))
+    print("Number of correct reviews: " + str(correctCount))
     return rate
 
 
