@@ -55,7 +55,7 @@ def train(path):
     print("Getting unique words...")
     sys.stdout.flush()
     uniques = set(words_temp)
-        
+    print("Numbers of unique words in training set: "+ str(len(uniques)))
     print("Counting occurences...")
     sys.stdout.flush()
  
@@ -74,7 +74,7 @@ class NBC:
         self.negative_mean = negative_mean
         self.positive_mean = positive_mean
         self.training = training
-
+# saves nbc.txt during training to be used in classification
 def save_NBC(nbc, file_str):
     f = open(file_str, 'wb')
     pickle.dump(nbc, f, protocol=pickle.HIGHEST_PROTOCOL)
@@ -264,6 +264,7 @@ def main():
         nbc = NBC(positive_mean, negative_mean, nbc)
         save_NBC(nbc, "nbc.txt")
         print("Done. Time used: {:.2f}s".format(time.time() - start))
+        
 
     elif is_test:
         start = time.time()
