@@ -35,12 +35,14 @@ def train(path):
 
     print("Loaded paths and vocabulary from data folder.")
     print("Running training, this may take a while...") 
-
+    number_of_files = 0
     for directory in dirs:
         print("Training from directory: " + directory.name) 
-        for file in glob.glob(str(directory) + "/*.txt"):
+        files = glob.glob(str(directory) + "/*.txt")
+        for file in files:
             infile = open(file, encoding='utf-8', errors='ignore')
             line = infile.readline()
+            number_of_files+=1
             tokens = split(line)
             for word in tokens:
                 if len(word) < 3 or not in_vocabulary(word, vocabulary):
@@ -51,7 +53,7 @@ def train(path):
                     words_temp.append((word, 1))
 
             infile.close()
-
+    print("Numbes of reviews in training set: " + str(number_of_files))
     print("Getting unique words...")
     sys.stdout.flush()
     uniques = set(words_temp)
