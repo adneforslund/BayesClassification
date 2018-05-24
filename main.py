@@ -57,8 +57,9 @@ def train(path):
     print("Getting unique words...")
     sys.stdout.flush()
     uniques = set(words_temp)
-    print("Numbers of unique words in training set: "+ str(len(uniques)))
+    
     print("Counting occurences...")
+    print("Numbers of unique words in training set: " + str(len(uniques)))
     sys.stdout.flush()
  
     count = Counter(words_temp)
@@ -190,7 +191,9 @@ def testAllReviews(nbc, path):
     totalCount = 0
     correctCount = 0
     
-
+    numbers_of_files_review = 0
+    number_of_positive_reviews = 0
+    number_of_negative_reviews = 0
     for directory in dirs:
         # Apner alle filer i en path,
         print("Testing from directory: " + str(directory))
@@ -198,8 +201,14 @@ def testAllReviews(nbc, path):
             infile = open(file, encoding='utf-8', errors='ignore')
             line = infile.readline()
             words = split(line)
-
+            numbers_of_files_review+=1
             classification = reviewClassifier(words, nbc.training, nbc.positive_mean, nbc.negative_mean)
+            
+            if directory.name == "neg":
+                number_of_negative_reviews+=1
+            elif directory.name == "pos":
+                number_of_positive_reviews+=1
+
 
             if classification == -1.0:
                  continue
@@ -211,7 +220,9 @@ def testAllReviews(nbc, path):
 
             infile.close()
     rate = float(correctCount) / float(totalCount) * 100
-
+    print("Number of reviews classified: "+str(numbers_of_files_review))
+    print("Number of positive reviews: " + str(number_of_positive_reviews))
+    print("Number of negative reviews: "+ str(number_of_negative_reviews))
     return rate
 
 
@@ -223,6 +234,7 @@ def reviewClassifier(review, word_list, positive, negative):
        relativeFreq = -1.0
     else:
        relativeFreq = neg / (neg + pos)
+    
     return relativeFreq
 
 def error_handler(parser, arg):
