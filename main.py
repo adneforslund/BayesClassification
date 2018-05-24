@@ -23,7 +23,7 @@ def in_vocabulary(word, vocabulary):
 def train(path):
     words_temp = []
     words_count = []
-    out = {}
+    
     print("Loading file contents...")
  
     try:
