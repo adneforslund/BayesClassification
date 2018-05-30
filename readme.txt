@@ -1,6 +1,10 @@
 
 Main.py
 
+
+There are no dependencies to this program, except for python3.6.*
+
+
 For help use '  python main.py -h   '
 
 To use this program, run it in the command line as python main.py with the following arguments
@@ -19,5 +23,26 @@ main.py {-cl , --classify} -f .
  
 
 main.py {-te, --test} -f path/to/DATA/aclImdb/
-  -classify all the reviews in test directory in the DATA folder, give pathname to the DATA-folder
+  - classify all the reviews in test directory in the DATA folder, give pathname to the DATA-folder
   - the training must already have been done, e.g. you need an nbc.txt file
+
+
+--Example of usage--
+
+Training, which must be done before anything else:
+
+python main.py -tr -f DATA/aclImdb/
+
+Testing:
+
+python main.py -te -f DATA/aclImdb/
+
+Classification of one review:
+
+(Important: a valid pathname must be given, in this case, the root path is used)
+
+python main.py -cl -f .
+Write your review here:
+
+
+

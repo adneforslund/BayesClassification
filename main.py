@@ -14,6 +14,7 @@ from pathlib import Path
 negative_mean = 0
 positive_mean = 0
 
+# looks for the word in the vocabulary made from the training. 
 def in_vocabulary(word, vocabulary):
     if word in vocabulary:
         return True
@@ -304,7 +305,7 @@ def main():
 
     elif is_classify:
         nbc = load_nbc("nbc.txt")
-        print("Skriv inn ditt review:")
+        print("Write your review here:")
         stdin = input()
         start = time.time() 
         res = review_classifier(stdin, nbc.training, nbc.positive_mean, nbc.negative_mean)
