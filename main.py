@@ -92,25 +92,25 @@ def load_nbc(file_str):
 
 
 
-#funkar'kje
+#
 def probability_pre(word, word_list, c):
     if word in word_list:
-        (icl, tot) = word_list[word]
-        if c == 0 and tot > 0:
-            return float(icl) / float(tot)
-        elif c == 1 and tot > 0:
-            return float(tot - icl) / float(tot)
+        (count_in_class, total) = word_list[word]
+        if c == 0 and total > 0:
+            return float(count_in_class) / float(total)
+        elif c == 1 and total > 0:
+            return float(total - count_in_class) / float(total)
     return -1.0
 
 
-def mean(c, word_list):
+def mean(word_class, word_list):
     
     counter = 0
     total = 0
     for w, (i, j) in word_list.items():
-        if c == 0:
+        if word_class == 0:
             counter += i
-        elif c == 1:
+        elif word_class == 1:
             counter += j - i
         total += j
     return float(counter) / float(total)
@@ -185,14 +185,14 @@ def pather(path):
     sys.stdout.flush()
     return directories
 
-def testAllReviews(nbc, path):
+def test_all_reviews(nbc, path):
     try:
         dirs = pather(path + "/test")
     except FileNotFoundError:
         print("Invalid pathname, try again. ")
         sys.exit(0)
-    totalCount = 0
-    correctCount = 0
+    total_count = 0
+    correct_count = 0
     
     numbers_of_files_review = 0
     number_of_positive_reviews = 0
@@ -205,11 +205,11 @@ def testAllReviews(nbc, path):
         # Apner alle filer i en path,
         print("Testing from directory: " + str(directory))
         for file in glob.glob(str(directory) + "/*.txt"):
-            infile = open(file, encoding='utf-8', errors='ignore')
-            line = infile.readline()
+            in_file = open(file, encoding='utf-8', errors='ignore')
+            line = in_file.readline()
             
             numbers_of_files_review+=1
-            classification = reviewClassifier(line, nbc.training, nbc.positive_mean, nbc.negative_mean)
+            classification = review_classifier(line, nbc.training, nbc.positive_mean, nbc.negative_mean)
             
             if directory.name == "neg":
                 number_of_negative_reviews+=1
@@ -221,35 +221,35 @@ def testAllReviews(nbc, path):
             elif classification < 0.5:
                 negative_count +=1
                 if directory.name == "neg":
-                    correctCount+=1
+                    correct_count+=1
                 
             elif classification > 0.5:
                 positive_count += 1
                 if directory.name == "pos":
-                    correctCount+=1
+                    correct_count+=1
                 
-            totalCount+=1
+            total_count+=1
 
-            infile.close()
-    rate = float(correctCount) / float(totalCount) * 100
+            in_file.close()
+    rate = float(correct_count) / float(total_count) * 100
     print("Number of reviews classified: "+str(numbers_of_files_review))
     print("Number of positive reviews in total: "+ str(number_of_positive_reviews) + ". Number of positive classifications: "+str(positive_count) )
     print("Number of negative reviews in total: " + str(number_of_negative_reviews) +
           ". Number of negative classifications: "+str(negative_count))
-    print("Number of correct reviews: " + str(correctCount))
+    print("Number of correct reviews: " + str(correct_count))
     return rate
 
 
 
-def reviewClassifier(review, word_list, positive, negative):
+def review_classifier(review, word_list, positive, negative):
     words = split(review)
     neg = classify(words, word_list, positive, negative, 0)
     pos = classify(words, word_list, positive, negative, 1)
     if neg == -1.0 or pos == -1.0:
-       relativeFreq = -1.0
+       relative_freq = -1.0
     else:
-       relativeFreq = neg / (neg + pos)
-    return relativeFreq
+       relative_freq = neg / (neg + pos)
+    return relative_freq
 
 def error_handler(parser, arg):
     if not os.path.exists(arg):
@@ -299,7 +299,7 @@ def main():
         print("Loading training data...")
         nbc = load_nbc("nbc.txt")
         print("Running test classification. Please wait, do not turn off your computer...")
-        rate = testAllReviews(nbc, path)
+        rate = test_all_reviews(nbc, path)
         print("Error rate: {:.2f}%\nTime used: {:.2f}s".format(100 - rate, time.time() - start))
 
     elif is_classify:
@@ -307,7 +307,7 @@ def main():
         print("Skriv inn ditt review:")
         stdin = input()
         start = time.time() 
-        res = reviewClassifier(stdin, nbc.training, nbc.positive_mean, nbc.negative_mean)
+        res = review_classifier(stdin, nbc.training, nbc.positive_mean, nbc.negative_mean)
         print(res)
         if res == -1.0:
             print("The review could not be read, doesn't contain any known words")
