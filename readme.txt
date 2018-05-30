@@ -12,6 +12,9 @@ To use this program, run it in the command line as python main.py with the follo
 main.py -h 
   -To get help using the program
 
+main.py -f
+  - Argument to give a pathname to data
+
 main.py {-tr, --train} -f path/to/DATA/aclImdb/
   - Train the classifier, given a pathname to the top directory containing the train-folder
   - Makes a text-file, that stores the state of the training algorithm and is used for classification
