@@ -92,7 +92,7 @@ def load_nbc(file_str):
 
 
 
-
+#funkar'kje
 def probability_pre(word, word_list, c):
     if word in word_list:
         (icl, tot) = word_list[word]
@@ -130,7 +130,9 @@ def classify(words, word_list, positive, negative, c):
 
     for w in words: 
         if len(w) < 3:
+               
             continue
+
         pre = probability_pre(w, word_list, 1)
         if pre <= 0.0:
             pre = 1.0
@@ -142,7 +144,8 @@ def classify(words, word_list, positive, negative, c):
             pre = 1.0
       
         probability_product_negative *= pre
-   
+
+    
     denom = probability_product_negative * negative + probability_product_positive * positive
    
     num = 0
@@ -204,9 +207,9 @@ def testAllReviews(nbc, path):
         for file in glob.glob(str(directory) + "/*.txt"):
             infile = open(file, encoding='utf-8', errors='ignore')
             line = infile.readline()
-            words = split(line)
+            
             numbers_of_files_review+=1
-            classification = reviewClassifier(words, nbc.training, nbc.positive_mean, nbc.negative_mean)
+            classification = reviewClassifier(line, nbc.training, nbc.positive_mean, nbc.negative_mean)
             
             if directory.name == "neg":
                 number_of_negative_reviews+=1
@@ -239,13 +242,13 @@ def testAllReviews(nbc, path):
 
 
 def reviewClassifier(review, word_list, positive, negative):
-    neg = classify(review, word_list, positive, negative, 0)
-    pos = classify(review, word_list, positive, negative, 1)
+    words = split(review)
+    neg = classify(words, word_list, positive, negative, 0)
+    pos = classify(words, word_list, positive, negative, 1)
     if neg == -1.0 or pos == -1.0:
        relativeFreq = -1.0
     else:
        relativeFreq = neg / (neg + pos)
-    
     return relativeFreq
 
 def error_handler(parser, arg):
@@ -305,6 +308,7 @@ def main():
         stdin = input()
         start = time.time() 
         res = reviewClassifier(stdin, nbc.training, nbc.positive_mean, nbc.negative_mean)
+        print(res)
         if res == -1.0:
             print("The review could not be read, doesn't contain any known words")
         elif res < 0.5:
